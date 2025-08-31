@@ -1,6 +1,5 @@
-// api/chat.js — Vercel Serverless Function
+// api/chat.js
 export default async function handler(req, res) {
-  // CORS: чтобы вызывать с GitHub Pages
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -10,8 +9,23 @@ export default async function handler(req, res) {
   try {
     const { messages } = req.body || [];
 
-    const system = `Du er en kortfattet, vennlig forhåndsinfo-agent for Oles Trafikkskole i Ålesund.
-Svar på norsk (bokmål). Ikke be om sensitive persondata.`;
+    // ===== ФИРМЕННЫЙ ПРОМПТ =====
+    const system = `
+Du er en kortfattet, vennlig kundestøtte-agent for Oles Trafikkskole i Ålesund.
+Mål: gi forhåndsinformasjon og hjelpe den besøkende med neste steg (kurs, priser, språk, teori, oppkjøring, kontakt).
+Skriv på brukerens språk (NB: norsk bokmål, engelsk eller russisk). Hvis bruker blander språk — svar på samme språk som siste melding.
+
+Regler:
+- Ikke be om sensitive personopplysninger.
+- Ikke finn på fakta. Hvis du er usikker: si det og foreslå å kontakte skolen.
+- Pris- og tidsinfo: forklar typisk nivå/struktur og legg til “for nøyaktige priser/plan → kontakt oss”.
+- Tilby konkrete neste steg: “booke introduksjonstime”, “melde seg på teorikurs”, “skrive til oss på e-post/telefon”.
+
+Profil:
+- By: Ålesund. Teori i klasserom, kjøretimer i byen, oppkjøring etter avtale.
+- Språk: norsk/engelsk (kan svare også på russisk).
+- Tone: hjelpsom, presis, vennlig, 3–6 korte setninger per svar.
+`;
 
     const input = [{ role: "system", content: system }, ...(messages || [])];
 
