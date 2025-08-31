@@ -8,14 +8,19 @@
     :root{--brand:#0b57d0;--bg:#f7f8fa;--text:#0f1b2a;--muted:#5f6b7a;--line:#d9dee5}
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-    header{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:14px 16px;color:#fff;background:var(--brand)}
-    header h1{margin:0;font-size:18px}
+    header{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:10px 14px}
+    .top{display:flex;gap:10px;align-items:center;max-width:980px;margin:0 auto}
+    .logo{width:34px;height:34px;border-radius:8px;background:var(--brand)}
+    .title{font-weight:700;color:var(--text)}
     .wrap{max-width:880px;margin:0 auto;padding:18px}
     .hero{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:16px}
     .hero h2{margin:0 0 6px 0;font-size:20px;color:var(--text)}
     .hero p{margin:6px 0 0 0;color:var(--muted)}
     .tags{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px}
     .tag{display:inline-block;background:#eef2ff;border:1px solid #cdd6fe;border-radius:20px;padding:6px 10px;font-size:13px;color:#31427a;cursor:pointer}
+    .cta{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap}
+    .btn{padding:10px 12px;border-radius:10px;border:1px solid var(--brand);background:var(--brand);color:#fff;text-decoration:none;font-weight:600}
+    .btn.alt{background:#fff;color:var(--brand)}
     .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:0;margin-bottom:16px}
     .chat{height:520px;overflow:auto;padding:14px;scroll-behavior:smooth}
     .bubble{max-width:75%;padding:10px 12px;border-radius:12px;margin:8px 0;line-height:1.4;white-space:pre-wrap}
@@ -29,13 +34,16 @@
 </head>
 <body>
 <header>
-  <h1>Oles Trafikkskole · Forhåndsinfo-Agent (Live)</h1>
+  <div class="top">
+    <div class="logo" aria-hidden="true"></div>
+    <div class="title">Oles Trafikkskole · Forhåndsinfo-Agent (Live)</div>
+  </div>
 </header>
 
 <div class="wrap">
   <div class="hero">
-    <h2>Spør før du melder deg — vi svarer med én gang</h2>
-    <p>Live-agent koblet til OpenAI. Prøv konkrete spørsmål: priser, teori (engelsk), oppkjøring, pakker, betaling.</p>
+    <h2>Spør før du melder deg — svar med én gang</h2>
+    <p>Vi svarer kort og presist om priser, språk (engelsk), teori og oppkjøring. Ingen sensitive data, takk.</p>
     <div class="tags" id="tags">
       <span class="tag">Hva koster det?</span>
       <span class="tag">Kan jeg ta teori på engelsk?</span>
@@ -43,12 +51,16 @@
       <span class="tag">Når har dere oppkjøring?</span>
       <span class="tag">Har dere pakketilbud?</span>
     </div>
+    <div class="cta">
+      <a class="btn" href="tel:+47-00000000">Ring oss</a>
+      <a class="btn alt" href="mailto:post@olestrafikkskole.no">Skriv e-post</a>
+    </div>
   </div>
 
   <div class="card">
     <div id="chat" class="chat"></div>
     <div class="input">
-      <input id="msg" type="text" placeholder="Skriv et spørsmål… / Напишите вопрос…" />
+      <input id="msg" type="text" placeholder="Skriv et spørsmål… / Напишите вопрос… / Ask a question…" />
       <button class="send" id="sendBtn">Send</button>
     </div>
   </div>
@@ -59,18 +71,14 @@
 </div>
 
 <script>
-  // ① Укажите ваш домен Vercel (без завершающего слеша)
+  // ваш рабочий API на Vercel:
   const API_URL = "https://oles-trafikkskole.vercel.app/api/chat";
 
-  // Элементы
   const chat = document.getElementById('chat');
   const msg  = document.getElementById('msg');
   const btn  = document.getElementById('sendBtn');
-
-  // История диалога для модели
   const history = [];
 
-  // UI helpers
   function push(text, who='bot'){
     const b = document.createElement('div');
     b.className = `bubble ${who==='me'?'me':'bot'}`;
@@ -79,19 +87,14 @@
     chat.scrollTop = chat.scrollHeight;
   }
 
-  // Приветствие
-  push("Hei! Jeg er forhåndsinfo-agenten for Oles Trafikkskole i Ålesund. Hva lurer du på?");
+  // приветствие
+  push("Hei! Jeg er AI-assistenten for Oles Trafikkskole i Ålesund. Spør gjerne om priser, språk, teori/oppkjøring eller påmelding.");
 
-  // Отправка
   async function send(){
     const text = msg.value.trim();
     if(!text) return;
-
-    // Показать своё сообщение
     push(text, 'me');
     msg.value = '';
-
-    // Обновить историю
     history.push({ role: "user", content: text });
 
     try {
@@ -100,22 +103,18 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: history })
       });
-
       const data = await r.json();
       const reply = data.reply || "Beklager, noe gikk galt. Prøv igjen.";
       push(reply, 'bot');
-
       history.push({ role: "assistant", content: reply });
-    } catch (e) {
+    } catch(e) {
       push("Teknisk feil. Prøv igjen litt senere.", 'bot');
     }
   }
 
   btn.addEventListener('click', send);
-  msg.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); send(); } });
-
-  // Теги-подсказки
-  document.getElementById('tags').addEventListener('click', (e)=>{
+  msg.addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); send(); } });
+  document.getElementById('tags').addEventListener('click', e=>{
     if(e.target.classList.contains('tag')){
       msg.value = e.target.textContent;
       send();
